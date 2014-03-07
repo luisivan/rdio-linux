@@ -1,0 +1,23 @@
+{
+  "name": "Rdio",
+  "version": "0.1.0",
+  "main": "index.html",
+  "window": {
+    "title": "Rdio",
+    "toolbar": true,
+    "frame": true,
+    "show": true,
+    "position": "center",
+    "icon": "app/icon.png"
+  },
+  "webkit": {
+    "plugin": true
+  },
+  "dependencies": {
+    "dbus-native": "*"
+  },
+  "devDependencies": {
+    "grunt": "*",
+    "grunt-node-webkit-builder": "*"
+  }
+}
