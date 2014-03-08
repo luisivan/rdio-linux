@@ -17,30 +17,20 @@ var bools = function(val) {
     }
 }
 
-var RdioDbus = function(win, rdio) {
+var RdioDbus = function(win) {
 
     var iface1 = obj.createInterface('org.mpris.MediaPlayer2')
     window.iface1 = iface1
 
+    var _this = this
+
     iface1.addProperty('CanQuit', bools(true))
     iface1.addProperty('CanRaise', bools(true))
     iface1.addProperty('HasTrackList', bools(false))
-    iface1.addProperty('SupportedUriSchemes', {
-        type: DBus.Define(Array),
-        getter: function(cb) {
-            cb([])
-        }
-    })
-    iface1.addProperty('SupportedMimeTypes', {
-        type: DBus.Define(Array),
-        getter: function(cb) {
-            cb([])
-        }
-    })
     iface1.addProperty('Identity', {
         type: DBus.Define(String),
         getter: function(cb) {
-            cb('RdioZZs')
+            cb('Rdio')
         }
     })
 
@@ -50,11 +40,6 @@ var RdioDbus = function(win, rdio) {
     iface1.addMethod('Quit', {}, function() {
         win.close(true)
     })
-    iface1.addSignal('Seeked', {
-        types: [
-            DBus.Define(Number)
-        ]
-    })
 
     var iface2 = obj.createInterface('org.mpris.MediaPlayer2.Player')
     window.iface2 = iface2
@@ -62,30 +47,52 @@ var RdioDbus = function(win, rdio) {
     iface2.addProperty('PlaybackStatus', {
         type: DBus.Define(String),
         getter: function(cb) {
-            console.log('uggg')
-            cb('Playing')
+            if (!_this.rdio) {
+                cb({})
+                return
+            }
+            if(_this.rdio.player.isPlaying())
+                cb('Playing')
+            else
+                cb('Paused')
+            console.log('PlaybackStatus')
         }
     })
     iface2.addProperty('Metadata', {
         type: DBus.Define(Object),
         getter: function(cb) {
             console.log('funyyy')
-            console.log(cb)
+            var track = {}
+            if (!_this.rdio) {
+                track = {
+                    key: '1',
+                    duration: 120,
+                    icon: 'http://www.accuradio.com/static/images/covers256//covers/a-f/avicii_true.jpg',
+                    name: 'BUu',
+                    artist: 'Avicii',
+                    album: 'dadad'
+                }
+            } else {
+                track = _this.rdio.player.playingTrack().attributes
+                //window.atrack = atrack
+            }
+            
             cb({
-                'mpris:trackid': obj.path + "/1",
-                'mpris:length': 10000,
-                'mpris:artUrl': 'http://www.accuradio.com/static/images/covers256//covers/a-f/avicii_true.jpg',
-                'xesam:title': 'Liar liar',
-                'xesam:artist': 'Avicii',
-                'xesam:album': 'True'
+                'mpris:trackid': '/org/mpris/MediaPlayer2/' + track.key,
+                'mpris:length': track.duration,
+                'mpris:artUrl': track.icon,
+                'xesam:title': track.name,
+                'xesam:artist': track.artist,
+                'xesam:album': track.album
             })
         }
     })
     iface2.addProperty('Position', {
         type: DBus.Define(Number),
         getter: function(cb) {
-            console.log(rdio.player.position())
-            cb(rdio.player.position()*1000000)
+            //console.log(rdio.player.position())
+            //cb(rdio.player.position()*1000000)
+            cb(3000)
         },
         setter: function(val, complete) {
             console.log(val)
@@ -100,30 +107,31 @@ var RdioDbus = function(win, rdio) {
     iface2.addProperty('CanControl', bools(true))
 
     iface2.addMethod('Next', {}, function() {
-        rdio.player.next()
+        _this.rdio.player.next()
     })
     iface2.addMethod('Previous', {}, function() {
-        rdio.player.previous()
+        _this.rdio.player.previous()
     })
     iface2.addMethod('Pause', {}, function() {
-        rdio.player.pause()
+        _this.rdio.player.pause()
     })
     iface2.addMethod('PlayPause', {}, function() {
-        rdio.player.playPause()
+        _this.rdio.player.playPause()
     })
     iface2.addMethod('Stop', {}, function() {
-        rdio.player.setCurrentPosition(0)
-        rdio.player.pause()
+        _this.rdio.player.setCurrentPosition(0)
+        _this.rdio.player.pause()
     })
     iface2.addMethod('Play', {}, function() {
-        rdio.player.play()
+        _this.rdio.player.play()
     })
     iface2.addMethod('Seek', { in: [ DBus.Define(Number) ] }, function(x, callback) {
         console.log(x)
-        rdio.player.seek(x)
+        _this.rdio.player.seek(x)
     })
     iface2.addMethod('SetPosition', { in: [ DBus.Define(String), DBus.Define(Number) ] }, function(o, x, callback) {
         console.log(o)
+        _this.rdio.player.seek(x)
     })
 
     iface1.update()

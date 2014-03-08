@@ -1,21 +1,27 @@
 var gui = require('nw.gui')
 
-var RdioDbus = require('./app/dbus3.js')
+var RdioDbus = require('./app/dbus2.js')
 
 var win = gui.Window.get()
 win.on('loaded', init)
 win.on('close', win.hide)
 
+var rdio = {}
+window.bus = new RdioDbus(win)
+
 function init() {
     var iframe = document.getElementsByTagName('iframe')[0]
     iframe.onload = function() {
         var rdio = iframe.contentWindow.R
-        window.rdio = rdio
+        bus.rdio = rdio
+        /*var rdio = {}
+        window.rdio = rdio*/
         /*rdio.player.on('change:playState', function(state) {
             alert('changeedd');
         })*/
-        window.bus = new RdioDbus(win, rdio)
+        
     }
+
 }
 /*
 adBlockerDetected: Array[1]
