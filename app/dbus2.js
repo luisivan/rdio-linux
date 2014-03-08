@@ -91,8 +91,8 @@ var RdioDbus = function(win) {
         type: DBus.Define(Number),
         getter: function(cb) {
             //console.log(rdio.player.position())
-            //cb(rdio.player.position()*1000000)
-            cb(3000)
+            cb(rdio.player.position())
+            //cb(3000)
         },
         setter: function(val, complete) {
             console.log(val)
