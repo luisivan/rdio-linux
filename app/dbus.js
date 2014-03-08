@@ -11,6 +11,10 @@ var RdioDbus = function(win, rdio) {
 
     bus.requestName('org.mpris.MediaPlayer2.rdio', 0)
 
+    this.bus = bus
+
+    this.PlaybackStatus = "Paused"
+
     this.setup()
 }
 
@@ -33,9 +37,12 @@ RdioDbus.prototype.setup = function() {
         },
         Quit: function() {
             win.close(true)
+        },
+        Seeked: function(x) {
+            alert(x)
         }
     },
-    impl['org.mpris.MediaPlayer2.Player'] = {
+    window.shiat = impl['org.mpris.MediaPlayer2.Player'] = {
         Next: function() {
             rdio.player.next()
         },
@@ -43,18 +50,22 @@ RdioDbus.prototype.setup = function() {
             rdio.player.previous()
         },
         Pause: function() {
+            alert('pause')
             rdio.player.pause()
         },
         PlayPause: function() {
             rdio.player.playPause()
         },
         Stop: function() {
-            rdio.player.stopListening()
+            rdio.player.setCurrentPosition(0)
+            rdio.player.pause()
         },
         Play: function() {
+            alert('play')
             rdio.player.play()
         },
         Seek: function(x) {
+            console.log(x)
             rdio.player.seek(x)
         },
         SetPosition: function(o, x) {
@@ -63,16 +74,20 @@ RdioDbus.prototype.setup = function() {
         },
         OpenUri: null,
 
-        PlaybackStatus: "Playing",
+        PlaybackStatus: this.PlaybackStatus,
         LoopStatus: 's',
         Rate: '5',
         Shuffle: false,
-        Metadata: {
-            'mpris:trackid': '/org/mpris/MediaPlayer2/0992',
-            'xesam:artist': 'Avicii'
-        },
+        Metadata: [
+            /*'mpris:trackid': '/org/mpris/MediaPlayer2/0992',
+            'mpris:length': 10000,*/
+            { type: 's', name: 'xesam:title', value: 'Liar liar'}/*,
+            'xesam:artist': 'Avicii',
+            'xesam:album': 'True'*/
+            //'mpris:artUrl': 'http://www.accuradio.com/static/images/covers256//covers/a-f/avicii_true.jpg'
+        ],
         Volume: rdio.player.volume(),
-        Position: rdio.player.position(),
+        Position: rdio.player.position()*1000000,
         MinimumRate: 1,
         MaximumRate: 1,
         CanGoNext: true,
@@ -81,6 +96,11 @@ RdioDbus.prototype.setup = function() {
         CanPause: true,
         CanSeek: true,
         CanControl: true
+    }
+    window.propdbus = impl['org.freedesktop.DBus.Properties'] = {
+        PropertiesChanged: function(s, asv, as) {
+            alert(s)
+        }
     }
 
     for (var i in ifaces) {

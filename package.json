@@ -14,7 +14,8 @@
     "plugin": true
   },
   "dependencies": {
-    "dbus-native": "*"
+    "dbus-native": "*",
+    "dbus": "*"
   },
   "devDependencies": {
     "grunt": "*",

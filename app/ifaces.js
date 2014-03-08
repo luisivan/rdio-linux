@@ -48,6 +48,11 @@ module.exports = {
             CanSeek: 'b',
             CanControl: 'b'
         }
+    },
+    'org.freedesktop.DBus.Properties': {
+        signals: {
+            PropertiesChanged: ["s", "a{sv}", "as"]
+        }
     }
 
 }
