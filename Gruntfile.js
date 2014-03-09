@@ -13,6 +13,12 @@ module.exports = function (grunt) {
         },
     })
 
-    grunt.loadNpmTasks('grunt-node-webkit-builder');
-    grunt.task.registerTask('default', ['nodewebkit']);
-};
+    grunt.loadNpmTasks('grunt-node-webkit-builder')
+    grunt.task.registerTask('default', ['nodewebkit'])
+}
+ /*
+
+  "webkit": {
+    "plugin": true
+  },
+ */

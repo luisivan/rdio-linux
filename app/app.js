@@ -1,4 +1,5 @@
-var gui = require('nw.gui')
+var gui = require('nw.gui'),
+    fs = require('fs')
 
 var RdioDbus = require('./app/dbus.js')
 
@@ -6,12 +7,30 @@ var win = gui.Window.get()
 win.on('loaded', init)
 win.on('close', win.hide)
 
-var rdio = {}
-window.bus = new RdioDbus(win)
+var bus = new RdioDbus(win)
 
 function init() {
+
+    document.onkeyup = function(e) {
+        if (e.which == 122)
+            win.toggleFullscreen()
+    }
+
     var iframe = document.getElementsByTagName('iframe')[0]
+
+    function injectCSS() {
+        var css = document.createElement("style")
+        css.type = "text/css"
+        fs.readFile('app/rdio.css', function(err, data) {
+            css.appendChild(document.createTextNode(data))
+            iframe.contentDocument.getElementsByTagName("head")[0].appendChild(css)
+        })
+    }
+
     iframe.onload = function() {
+
+        injectCSS()
+
         var rdio = iframe.contentWindow.R
         bus.rdio = rdio
         window.rdio = rdio
@@ -26,9 +45,8 @@ function init() {
             //console.warn(x)
             //playerIface.emit('Seeked', x*1000000)
         })
-        
     }
-
+    
 }
 /*
 adBlockerDetected: Array[1]

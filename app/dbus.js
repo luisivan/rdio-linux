@@ -1,13 +1,10 @@
 var DBus = require('dbus'),
     download = require('download')
-window.DBus = DBus
 
 var dbus = new DBus()
-window.dbus = dbus
 
 var service = dbus.registerService('session', 'org.mpris.MediaPlayer2.rdio')
 var obj = service.createObject('/org/mpris/MediaPlayer2')
-window.obj = obj
 
 var bools = function(val) {
     return {
@@ -24,8 +21,6 @@ var RdioDbus = function(win) {
 
     this.updateMetadata = function() {
         var track = _this.rdio.player.playingTrack().attributes
-
-        console.warn(track.duration*1000000)
 
         download({ url: track.icon, name: track.key + '.jpg' }, '/tmp')
 
@@ -52,7 +47,6 @@ var RdioDbus = function(win) {
     }
 
     var propIface = obj.createInterface('org.freedesktop.DBus.Properties')
-    window.propIface = propIface
 
     propIface.addSignal('PropertiesChanged', {
         types: [
@@ -62,9 +56,7 @@ var RdioDbus = function(win) {
         ]
     })
 
-    propIface.on('PropertiesChanged', function(name, changedProps, ignoreProps) {
-        console.warn(changedProps)
-    })
+    // propIface.on('PropertiesChanged', function(name, changedProps, ignoreProps) { })
 
     var appIface = obj.createInterface('org.mpris.MediaPlayer2')
     window.appIface = appIface
@@ -113,30 +105,18 @@ var RdioDbus = function(win) {
         getter: function(cb) {
             if (!_this.rdio) return cb(0)
 
-            console.warn('Position')
-            console.warn(_this.rdio.player.position())
             cb(_this.rdio.player.position()*1000000)
-            //playerIface.emit('Seeked', _this.rdio.player.position()*1000000)
         }
     })
-    playerIface.addProperty('Rate', {
-        type: {type: 'd'},
-        getter: function(cb) {
-            cb(1.0)
-        }
-    })
-    playerIface.addProperty('MinimumRate', {
+    var rate = {
         type: {type: 'd'},
         getter: function(cb) {
             cb(1)
         }
-    })
-    playerIface.addProperty('MaximumRate', {
-        type: {type: 'd'},
-        getter: function(cb) {
-            cb(1)
-        }
-    })
+    }
+    playerIface.addProperty('Rate', rate)
+    playerIface.addProperty('MinimumRate', rate)
+    playerIface.addProperty('MaximumRate', rate)
     playerIface.addProperty('CanGoNext', bools(true))
     playerIface.addProperty('CanGoPrevious', bools(true))
     playerIface.addProperty('CanPlay', bools(true))
@@ -173,9 +153,9 @@ var RdioDbus = function(win) {
         propertiesChanged({'PlaybackStatus': 'Playing'})
     })
     playerIface.addMethod('SetPosition', { in: [ DBus.Define(String), DBus.Define(Number) ] }, function(o, x, cb) {
-        _this.rdio.player.seek(parseInt(x/1000000))
+        //_this.rdio.player.seek(parseInt(x/1000000))
         //playerIface.emit('Seeked', 100000)
-        playerIface.emit('Seeked', _this.rdio.player.position()*1000000)
+        //playerIface.emit('Seeked', _this.rdio.player.position()*1000000)
     })
 
     playerIface.addSignal('Seeked', {
