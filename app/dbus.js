@@ -1,113 +1,198 @@
-var util = require('util')
+var DBus = require('dbus'),
+    download = require('download')
+window.DBus = DBus
 
-var dbus = require('dbus-native'),
-    bus = dbus.sessionBus()
+var dbus = new DBus()
+window.dbus = dbus
 
-var ifaces = require('./ifaces.js')
+var service = dbus.registerService('session', 'org.mpris.MediaPlayer2.rdio')
+var obj = service.createObject('/org/mpris/MediaPlayer2')
+window.obj = obj
 
-var RdioDbus = function(win, rdio) {
-    this.win = win
-    this.rdio = rdio
-
-    bus.requestName('org.mpris.MediaPlayer2.rdio', 0)
-
-    this.bus = bus
-
-    this.PlaybackStatus = "Paused"
-
-    this.setup()
+var bools = function(val) {
+    return {
+        type: DBus.Define(Boolean),
+        getter: function(callback) {
+            callback(val)
+        }
+    }
 }
 
-RdioDbus.prototype.setup = function() {
+var RdioDbus = function(win) {
 
-    var impl = {}
+    var _this = this
 
-    var win = this.win,
-        rdio = this.rdio
+    this.updateMetadata = function() {
+        var track = _this.rdio.player.playingTrack().attributes
 
-    impl['org.mpris.MediaPlayer2'] = {
-        CanQuit: true,
-        Fullscreen: false,
-        CanSetFullscreen: false,
-        CanRaise: true,
-        HasTrackList: false,
-        Identity: 'Rdio',
-        Raise: function() {
-            win.focus()
-        },
-        Quit: function() {
-            win.close(true)
-        },
-        Seeked: function(x) {
-            alert(x)
+        console.warn(track.duration*1000000)
+
+        download({ url: track.icon, name: track.key + '.jpg' }, '/tmp')
+
+        track = {
+            'mpris:trackid': '/com/rdio/MediaPlayer2/' + track.key,
+            'mpris:length': track.duration*1000000,
+            'xesam:title': track.name,
+            'xesam:artist': track.artist,
+            'xesam:album': track.album,
+            'mpris:artUrl': 'file:///tmp/' + track.key + '.jpg'
         }
-    },
-    window.shiat = impl['org.mpris.MediaPlayer2.Player'] = {
-        Next: function() {
-            rdio.player.next()
-        },
-        Previous: function() {
-            rdio.player.previous()
-        },
-        Pause: function() {
-            alert('pause')
-            rdio.player.pause()
-        },
-        PlayPause: function() {
-            rdio.player.playPause()
-        },
-        Stop: function() {
-            rdio.player.setCurrentPosition(0)
-            rdio.player.pause()
-        },
-        Play: function() {
-            alert('play')
-            rdio.player.play()
-        },
-        Seek: function(x) {
-            console.log(x)
-            rdio.player.seek(x)
-        },
-        SetPosition: function(o, x) {
-            console.log(o)
-            console.log(x)
-        },
-        OpenUri: null,
-
-        PlaybackStatus: this.PlaybackStatus,
-        LoopStatus: 's',
-        Rate: '5',
-        Shuffle: false,
-        Metadata: [
-            /*'mpris:trackid': '/org/mpris/MediaPlayer2/0992',
-            'mpris:length': 10000,*/
-            { type: 's', name: 'xesam:title', value: 'Liar liar'}/*,
-            'xesam:artist': 'Avicii',
-            'xesam:album': 'True'*/
-            //'mpris:artUrl': 'http://www.accuradio.com/static/images/covers256//covers/a-f/avicii_true.jpg'
-        ],
-        Volume: rdio.player.volume(),
-        Position: rdio.player.position()*1000000,
-        MinimumRate: 1,
-        MaximumRate: 1,
-        CanGoNext: true,
-        CanGoPrevious: true,
-        CanPlay: true,
-        CanPause: true,
-        CanSeek: true,
-        CanControl: true
+        propertiesChanged({'Metadata': track})
+        return track
     }
-    window.propdbus = impl['org.freedesktop.DBus.Properties'] = {
-        PropertiesChanged: function(s, asv, as) {
-            alert(s)
+
+    this.updateState = function() {
+        var state = (_this.rdio.player.isPlaying()) ? 'Playing' : 'Paused'
+        propertiesChanged({'PlaybackStatus': state})
+        return state
+    }
+
+    var propertiesChanged = function(data) {
+        propIface.emit('PropertiesChanged', playerIface.name, data, [])
+    }
+
+    var propIface = obj.createInterface('org.freedesktop.DBus.Properties')
+    window.propIface = propIface
+
+    propIface.addSignal('PropertiesChanged', {
+        types: [
+            DBus.Define(String),
+            DBus.Define(Object),
+            {type: 'as'}
+        ]
+    })
+
+    propIface.on('PropertiesChanged', function(name, changedProps, ignoreProps) {
+        console.warn(changedProps)
+    })
+
+    var appIface = obj.createInterface('org.mpris.MediaPlayer2')
+    window.appIface = appIface
+
+    appIface.addProperty('CanQuit', bools(true))
+    appIface.addProperty('CanRaise', bools(true))
+    appIface.addProperty('HasTrackList', bools(false))
+    appIface.addProperty('Identity', {
+        type: DBus.Define(String),
+        getter: function(cb) {
+            cb('Rdio')
         }
-    }
+    })
 
-    for (var i in ifaces) {
-        impl[i].name = i
-        ifaces[i].name = i
-        bus.exportInterface(impl[i], '/org/mpris/MediaPlayer2', ifaces[i])
-    }
+    appIface.addMethod('Raise', {}, function() {
+        win.focus()
+    })
+    appIface.addMethod('Quit', {}, function() {
+        win.close(true)
+    })
+
+    var playerIface = obj.createInterface('org.mpris.MediaPlayer2.Player')
+    window.playerIface = playerIface
+
+    playerIface.addProperty('PlaybackStatus', {
+        type: DBus.Define(String),
+        getter: function(cb) {
+            if (!_this.rdio) return cb('Paused')
+
+            var state = (_this.rdio.player.isPlaying()) ? 'Playing' : 'Paused'
+            cb(state)
+        }
+    })
+    playerIface.addProperty('Metadata', {
+        type: DBus.Define(Object),
+        getter: function(cb) {
+            var track = {}
+            if (_this.rdio)
+                track = _this.updateMetadata()
+                
+            cb(track)
+        }
+    })
+    playerIface.addProperty('Position', {
+        type: DBus.Define(Number),
+        getter: function(cb) {
+            if (!_this.rdio) return cb(0)
+
+            console.warn('Position')
+            console.warn(_this.rdio.player.position())
+            cb(_this.rdio.player.position()*1000000)
+            //playerIface.emit('Seeked', _this.rdio.player.position()*1000000)
+        }
+    })
+    playerIface.addProperty('Rate', {
+        type: {type: 'd'},
+        getter: function(cb) {
+            cb(1.0)
+        }
+    })
+    playerIface.addProperty('MinimumRate', {
+        type: {type: 'd'},
+        getter: function(cb) {
+            cb(1)
+        }
+    })
+    playerIface.addProperty('MaximumRate', {
+        type: {type: 'd'},
+        getter: function(cb) {
+            cb(1)
+        }
+    })
+    playerIface.addProperty('CanGoNext', bools(true))
+    playerIface.addProperty('CanGoPrevious', bools(true))
+    playerIface.addProperty('CanPlay', bools(true))
+    playerIface.addProperty('CanPause', bools(true))
+    playerIface.addProperty('CanSeek', bools(true))
+    playerIface.addProperty('CanControl', bools(true))
+
+    playerIface.addMethod('Next', {}, function() {
+        _this.rdio.player.next()
+        _this.updateMetadata()
+        propertiesChanged({'PlaybackStatus': 'Playing'})
+    })
+    playerIface.addMethod('Previous', {}, function() {
+        _this.rdio.player.previous()
+        _this.updateMetadata()
+        propertiesChanged({'PlaybackStatus': 'Playing'})
+    })
+    playerIface.addMethod('Pause', {}, function() {
+        _this.rdio.player.pause()
+        propertiesChanged({'PlaybackStatus': 'Paused'})
+    })
+    playerIface.addMethod('PlayPause', {}, function() {
+        _this.rdio.player.playPause()
+        _this.updateState()
+    })
+    playerIface.addMethod('Stop', {}, function() {
+        _this.rdio.player.setCurrentPosition(0)
+        _this.rdio.player.pause()
+        _this.updateMetadata()
+        propertiesChanged({'PlaybackStatus': 'Paused'})
+    })
+    playerIface.addMethod('Play', {}, function() {
+        _this.rdio.player.play()
+        propertiesChanged({'PlaybackStatus': 'Playing'})
+    })
+    playerIface.addMethod('SetPosition', { in: [ DBus.Define(String), DBus.Define(Number) ] }, function(o, x, cb) {
+        _this.rdio.player.seek(parseInt(x/1000000))
+        //playerIface.emit('Seeked', 100000)
+        playerIface.emit('Seeked', _this.rdio.player.position()*1000000)
+    })
+
+    playerIface.addSignal('Seeked', {
+        types: [
+            DBus.Define(Number)
+        ]
+    })
+
+    playerIface.on('Seeked', function(x) {
+        console.warn('seeked')
+        console.warn(x)
+    })
+
+    propIface.update()
+    appIface.update()
+    playerIface.update()
+
 }
 
 module.exports = RdioDbus

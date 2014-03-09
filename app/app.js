@@ -1,6 +1,6 @@
 var gui = require('nw.gui')
 
-var RdioDbus = require('./app/dbus2.js')
+var RdioDbus = require('./app/dbus.js')
 
 var win = gui.Window.get()
 win.on('loaded', init)
@@ -14,11 +14,18 @@ function init() {
     iframe.onload = function() {
         var rdio = iframe.contentWindow.R
         bus.rdio = rdio
-        /*var rdio = {}
-        window.rdio = rdio*/
-        /*rdio.player.on('change:playState', function(state) {
-            alert('changeedd');
-        })*/
+        window.rdio = rdio
+        bus.updateMetadata()
+        rdio.player.on('change:playState', function() {
+            bus.updateState()
+        })
+        rdio.player.on('change:playingTrack', function() {
+            bus.updateMetadata()
+        })
+        rdio.player.on('change:position', function(obj, x) {
+            //console.warn(x)
+            //playerIface.emit('Seeked', x*1000000)
+        })
         
     }
 
