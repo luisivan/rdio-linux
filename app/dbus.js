@@ -4,15 +4,13 @@ var DBus = require('dbus'),
 
 var dbus = new DBus()
 
-var service = dbus.registerService('session', 'org.mpris.MediaPlayer2.rdio')
-var obj = service.createObject('/org/mpris/MediaPlayer2')
+var service = dbus.registerService('session', 'org.mpris.MediaPlayer2.rdio'),
+    obj = service.createObject('/org/mpris/MediaPlayer2')
 
 var bools = function(val) {
     return {
         type: DBus.Define(Boolean),
-        getter: function(callback) {
-            callback(val)
-        }
+        getter: function(cb) { cb(val) }
     }
 }
 
@@ -28,7 +26,7 @@ var RdioDbus = function(win) {
             res.pipe(file)
         })
 
-        track = {
+        var metadata = {
             'mpris:trackid': '/com/rdio/MediaPlayer2/' + track.key,
             'mpris:length': track.duration*1000000,
             'xesam:title': track.name,
@@ -36,8 +34,8 @@ var RdioDbus = function(win) {
             'xesam:album': track.album,
             'mpris:artUrl': 'file:///tmp/' + track.key + '.jpg'
         }
-        propertiesChanged({'Metadata': track})
-        return track
+        propertiesChanged({'Metadata': metadata})
+        return metadata
     }
 
     this.updateState = function() {
@@ -60,19 +58,15 @@ var RdioDbus = function(win) {
         ]
     })
 
-    // propIface.on('PropertiesChanged', function(name, changedProps, ignoreProps) { })
 
     var appIface = obj.createInterface('org.mpris.MediaPlayer2')
-    window.appIface = appIface
 
     appIface.addProperty('CanQuit', bools(true))
     appIface.addProperty('CanRaise', bools(true))
     appIface.addProperty('HasTrackList', bools(false))
     appIface.addProperty('Identity', {
         type: DBus.Define(String),
-        getter: function(cb) {
-            cb('Rdio')
-        }
+        getter: function(cb) { cb('Rdio') }
     })
 
     appIface.addMethod('Raise', {}, function() {
@@ -83,7 +77,6 @@ var RdioDbus = function(win) {
     })
 
     var playerIface = obj.createInterface('org.mpris.MediaPlayer2.Player')
-    window.playerIface = playerIface
 
     playerIface.addProperty('PlaybackStatus', {
         type: DBus.Define(String),
@@ -114,9 +107,7 @@ var RdioDbus = function(win) {
     })
     var rate = {
         type: {type: 'd'},
-        getter: function(cb) {
-            cb(1)
-        }
+        getter: function(cb) { cb(1) }
     }
     playerIface.addProperty('Rate', rate)
     playerIface.addProperty('MinimumRate', rate)
@@ -158,20 +149,19 @@ var RdioDbus = function(win) {
     })
     playerIface.addMethod('SetPosition', { in: [ DBus.Define(String), DBus.Define(Number) ] }, function(o, x, cb) {
         //_this.rdio.player.seek(parseInt(x/1000000))
-        //playerIface.emit('Seeked', 100000)
         //playerIface.emit('Seeked', _this.rdio.player.position()*1000000)
     })
 
-    playerIface.addSignal('Seeked', {
+    // TODO
+    /*playerIface.addSignal('Seeked', {
         types: [
             DBus.Define(Number)
         ]
     })
-
     playerIface.on('Seeked', function(x) {
         console.warn('seeked')
         console.warn(x)
-    })
+    })*/
 
     propIface.update()
     appIface.update()

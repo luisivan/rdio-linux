@@ -1,9 +1,12 @@
 #header {
 	background-color: #ececec !important;
 	background-image: none !important;
-	-webkit-app-region: drag !important;
 }
+
+/*
+TODO
+	-webkit-app-region: drag !important;
 
 button, a, input {
 	-webkit-app-region: no-drag;
-}
+}*/

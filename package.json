@@ -7,7 +7,7 @@
     "title": "Rdio",
     "toolbar": false,
     "frame": true,
-    "show": true,
+    "show": false,
     "width": 800,
     "height": 600,
     "position": "center",
