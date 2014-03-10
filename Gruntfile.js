@@ -9,7 +9,7 @@ module.exports = function (grunt) {
                 linux32: false,
                 linux64: true
             },
-            src: ['package.json', 'app/*']
+            src: ['package.json', 'index.html', 'icon.png', 'app/*', 'node_modules/dbus/**']
         },
     })
 

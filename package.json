@@ -1,20 +1,23 @@
 {
   "name": "Rdio",
   "version": "0.1.0",
+  "author": "Luis Iván Cuende <me@luisivan.net>",
   "main": "index.html",
   "window": {
     "title": "Rdio",
     "toolbar": false,
     "frame": true,
     "show": true,
-    "position": "center",
     "width": 800,
     "height": 600,
-    "icon": "app/icon.png"
+    "position": "center",
+    "icon": "icon.png"
+  },
+  "webkit": {
+    "plugin": true
   },
   "dependencies": {
-    "dbus": "*",
-    "download": "*"
+    "dbus": "*"
   },
   "devDependencies": {
     "grunt": "*",

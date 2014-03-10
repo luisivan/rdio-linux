@@ -1,5 +1,6 @@
 var DBus = require('dbus'),
-    download = require('download')
+    http = require('http'),
+    fs = require('fs')
 
 var dbus = new DBus()
 
@@ -22,7 +23,10 @@ var RdioDbus = function(win) {
     this.updateMetadata = function() {
         var track = _this.rdio.player.playingTrack().attributes
 
-        download({ url: track.icon, name: track.key + '.jpg' }, '/tmp')
+        var file = fs.createWriteStream('/tmp/' + track.key + '.jpg')
+        http.get(track.icon, function(res) {
+            res.pipe(file)
+        })
 
         track = {
             'mpris:trackid': '/com/rdio/MediaPlayer2/' + track.key,
