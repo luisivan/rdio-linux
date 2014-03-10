@@ -68,6 +68,10 @@ var RdioDbus = function(win) {
         type: DBus.Define(String),
         getter: function(cb) { cb('Rdio') }
     })
+    appIface.addProperty('DesktopEntry', {
+        type: DBus.Define(String),
+        getter: function(cb) { cb('Rdio') }
+    })
 
     appIface.addMethod('Raise', {}, function() {
         win.focus()

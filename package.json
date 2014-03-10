@@ -1,7 +1,26 @@
 {
   "name": "Rdio",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Luis Iván Cuende <me@luisivan.net>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luisivan/rdio-linux.git"
+  },
+  "licenses": [
+    {
+      "type": "GPL-3.0+",
+      "url": "http://www.gnu.org/licenses/gpl.txt"
+    }
+  ],
+  "dependencies": {
+    "dbus": "*"
+  },
+  "devDependencies": {
+    "grunt": "*",
+    "grunt-node-webkit-builder": "*",
+    "grunt-contrib-copy": "*",
+    "grunt-chmod": "*"
+  },
   "main": "index.html",
   "window": {
     "title": "Rdio",
@@ -11,16 +30,9 @@
     "width": 800,
     "height": 600,
     "position": "center",
-    "icon": "icon.png"
+    "icon": "Rdio.png"
   },
   "webkit": {
     "plugin": true
-  },
-  "dependencies": {
-    "dbus": "*"
-  },
-  "devDependencies": {
-    "grunt": "*",
-    "grunt-node-webkit-builder": "*"
   }
 }

@@ -11,8 +11,35 @@ module.exports = function (grunt) {
             },
             src: ['package.json', 'index.html', 'icon.png', 'app/*', 'node_modules/dbus/**']
         },
+        copy: {
+            bin: {
+                expand: true,
+                cwd: 'build/releases/Rdio/linux'+process.arch.replace('x', '')+'/Rdio/',
+                src: ['nw.pak', 'Rdio'],
+                dest: process.env['HOME'] + '/.local/share/Rdio/',
+                flatten: true,
+            },
+            icon: {
+                src: 'Rdio.png',
+                dest: process.env['HOME'] + '/.local/share/icons/',
+            },
+            desktop: {
+                src: 'Rdio.desktop',
+                dest: process.env['HOME'] + '/.local/share/applications/',
+            }
+        },
+        chmod: {
+            options: {
+                mode: '755'
+            },
+            bin: {
+                src: process.env['HOME'] + '/.local/share/Rdio/Rdio'
+            }
+        }
     })
 
     grunt.loadNpmTasks('grunt-node-webkit-builder')
-    grunt.task.registerTask('default', ['nodewebkit'])
+    grunt.loadNpmTasks('grunt-contrib-copy')
+    grunt.loadNpmTasks('grunt-chmod')
+    grunt.task.registerTask('default', ['nodewebkit', 'copy', 'chmod'])
 }

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Rdio
+GenericName=Music Player
+Comment=Rdio integration for Linux
+Icon=Rdio
+Exec=$HOME/.local/share/Rdio/Rdio
+Terminal=false
+Type=Application
+Categories=Audio;Music;Player;AudioVideo
