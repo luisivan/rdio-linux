@@ -15,7 +15,7 @@ module.exports = function (grunt) {
             bin: {
                 expand: true,
                 cwd: 'build/releases/Rdio/linux'+process.arch.replace('x', '')+'/Rdio/',
-                src: ['nw.pak', 'Rdio'],
+                src: ['libffmpegsumo.so', 'nw.pak', 'Rdio'],
                 dest: process.env['HOME'] + '/.local/share/Rdio/',
                 flatten: true,
             },

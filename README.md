@@ -1,4 +1,4 @@
 Rdio Linux
 ===========
 
-WIP
+To install just run `npm install` and `grunt`
